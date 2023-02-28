@@ -73,6 +73,8 @@ WantedBy=multi-user.target
 
 And run:
 ```
+wget https://raw.githubusercontent.com/meatlayer/ipv6autoptr/main/ipv6autoptr.py -O /usr/local/bin/ipv6autoptr.py
+chmod 755 /usr/local/bin/ipv6autoptr.py
 systemctl daemon-reload
 systemctl enable ipv6autoptr.service
 systemctl start ipv6autoptr.service
