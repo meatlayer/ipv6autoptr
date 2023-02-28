@@ -12,7 +12,8 @@ pip3 install ipaddress
 
 We also need a patch for the socket server module so that it can support ipv6 family. 
 I used this patch: https://bugs.python.org/file35147/issue20215_socketserver.patch
-for module /usr/lib/python3.9/socketserver.py
+for module in:
+`/usr/lib/python3.9/socketserver.py`
 
 I think I will place the patched file directly in the repository for those who encounter difficulties so that it can be replaced with the standard one that comes from OS packages.
 
