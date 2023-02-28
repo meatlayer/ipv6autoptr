@@ -20,7 +20,7 @@ I think I will place the patched file directly in the repository for those who e
 ### An example of how it works ###
 ```
 nslookup -type=PTR 2a0a:8d80::251
-╤хЁтхЁ:  2a0a8d800000a0000000000000000011.ip6.mydomain.net
+╤хЁтхЁ:  safe.dns.yandex.ru
 Address:  2a02:6b8::feed:bad
 
 Non-authoritative answer:
@@ -29,7 +29,7 @@ Non-authoritative answer:
 
 ```
 nslookup -type=PTR 2a0a:8d80:0:a000::fefe
-╤хЁтхЁ:  2a0a8d800000a0000000000000000011.ip6.mydomain.net
+╤хЁтхЁ:  safe.dns.yandex.ru
 Address:  2a02:6b8::feed:bad
 
 Non-authoritative answer:
