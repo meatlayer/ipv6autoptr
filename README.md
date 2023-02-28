@@ -28,7 +28,7 @@ Non-authoritative answer:
 
 ```
 nslookup -type=PTR 2a0a:8d80:0:a000::fefe
-╤хЁтхЁ:  2a0a8d800000a0000000000000000011.ip6.webhost1.net
+╤хЁтхЁ:  2a0a8d800000a0000000000000000011.ip6.mydomain.net
 Address:  2a02:6b8::feed:bad
 
 Non-authoritative answer:
