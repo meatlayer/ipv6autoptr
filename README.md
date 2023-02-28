@@ -3,6 +3,12 @@
 This simple DNS server on Python that is designed to automatically generate PTR ipv6 records on the fly, dynamically.
 This solution is needed primarily for ISP and Hosting Providers that have their own IPv6 subnets and who need automaticly per IPv6  PTR records (reverse DNS records) for customers and services.
 
+
+> **Warning**
+> 
+> This mini DNS server can ONLY generate PTR for IPV6. He can't do anything else! This is its main function.
+
+
 Python 3 is required for the script to work. As well as installing modules via pip3:
 ```
 pip3 install dnslib
@@ -81,3 +87,6 @@ systemctl enable ipv6autoptr.service
 systemctl start ipv6autoptr.service
 systemctl status ipv6autoptr.service
 ```
+
+
+
