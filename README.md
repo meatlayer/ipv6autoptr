@@ -37,7 +37,7 @@ e.f.e.f.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.a.0.0.0.0.0.8.d.8.a.0.a.2.ip6.arpa        
 
 Each IPv6 for which an attempt is made to obtain a reverse DNS entry will automatically generate a response.
 
-
+### Configuration ###
 In the script itself, you must specify your IPv6 subnets, IP and your static domain as configuration:
 ```
 # Set up subnets
