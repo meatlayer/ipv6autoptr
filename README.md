@@ -57,6 +57,7 @@ IP6 = '2a0a:XXX:0:a000::125'
 
 ### Configuration Custom PTR ###
 Custom PTR for customers and for each IPv6 / ip6.arpa
+
 Completed example [/etc/ipv6autoptr.conf](https://github.com/meatlayer/ipv6autoptr/blob/main/ipv6autoptr.conf):
 
 Example IPV6 2a0a:8d80::11 = 1.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.d.8.a.0.a.2.ip6.arpa.
