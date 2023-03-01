@@ -55,6 +55,21 @@ IP = '122.123.124.125'
 IP6 = '2a0a:XXX:0:a000::125'
 ```
 
+### Configuration Custom PTR ###
+Custom PTR for customers and for each IPv6 / ip6.arpa
+Completed example [/etc/ipv6autoptr.conf](https://github.com/meatlayer/ipv6autoptr/blob/main/ipv6autoptr.conf):
+
+Example IPV6 2a0a:8d80::11 = 1.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.d.8.a.0.a.2.ip6.arpa.
+
+Example IPV6 2a0a:8d80::f1f1 = 1.f.1.f.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.d.8.a.0.a.2.ip6.arpa.
+
+
+Then `/etc/ipv6autoptr.conf` file:
+```
+1.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.d.8.a.0.a.2.ip6.arpa. = custom-ptr.ip6.mydomain.net
+1.f.1.f.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.d.8.a.0.a.2.ip6.arpa. = custom-ptr2.ip6.mydomain.net
+```
+
 
 ### How to run and create systemd service in OS Debian/Ubuntu ###
 Create file:
@@ -82,6 +97,7 @@ And run:
 ```
 wget https://raw.githubusercontent.com/meatlayer/ipv6autoptr/main/ipv6autoptr.py -O /usr/local/bin/ipv6autoptr.py
 chmod 755 /usr/local/bin/ipv6autoptr.py
+touch /etc/ipv6autoptr.conf
 systemctl daemon-reload
 systemctl enable ipv6autoptr.service
 systemctl start ipv6autoptr.service
