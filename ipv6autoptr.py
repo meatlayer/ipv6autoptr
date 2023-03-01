@@ -124,7 +124,7 @@ def dns_response_ipv6ptr(data):
                     
                     logging.info(f"IPV6: {ipv6_addr} found in subnet {subnet} and resolv answer as: {ptr_answerd}")
                     logging.info("SERVER ANSWER: " + ptr_answerd)
-                    reply.add_answer(RR(rname=qname, rtype=QTYPE.PTR, rdata=PTR(ptr_answerd), ttl=60))
+                    reply.add_answer(RR(rname=qname, rtype=QTYPE.PTR, rdata=PTR(ptr_answerd), ttl=3600))
                     break
 
             else:
