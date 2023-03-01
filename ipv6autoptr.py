@@ -66,7 +66,7 @@ records = {
     D.robot: [CNAME(D)],
 }
 
-# same func for ipv6 ptr
+# func for ipv6 auto ptr
 def dns_response_ipv6ptr(data):
     request = DNSRecord.parse(data)
     reply = DNSRecord(DNSHeader(id=request.header.id, qr=1, aa=1, ra=1), q=request.q)
@@ -78,12 +78,9 @@ def dns_response_ipv6ptr(data):
     ptrdomain_name = str(request.q.qname).rstrip('.ip6.arpa.')[::-1]
     ptrdomain_name = ptrdomain_name.replace('.', '')
     ipv6_domain = D
-    ptr_answerd = str(ptrdomain_name+'.'+ipv6_domain)
-    request = DNSRecord.parse(data)
 
     #if req type = PTR
     if '.ip6.arpa' in qn:
-        #print("OK ip6.arpa found")
 
         if request.q.qtype == '12' or request.q.qtype == QTYPE.PTR or request.q.qtype == 'PTR':
 
@@ -99,7 +96,6 @@ def dns_response_ipv6ptr(data):
 
             # Create an IPv6 address object from the byte string
             ipv6_addr = ipaddress.IPv6Address(byte_string)
-
             logging.info("CLIENT REQUEST: " + qn)
 
             # Search the subnets for a match
@@ -108,6 +104,24 @@ def dns_response_ipv6ptr(data):
                 subnet = ipaddress.IPv6Network(subnet_str)
                 if ipv6_addr in subnet:
                     match = True
+                         
+                    # read config file to retrieve parameter-value pairs for PTR answer
+                    with open('/etc/ipv6autoptr.conf') as f:
+                        lines = f.readlines()
+                        # parse parameters from config file
+                        config_params = {}
+                        for line in lines:
+                            param, value = line.strip().split(' = ')
+                            config_params[param.strip()] = value.strip()
+
+                    # Check if the PTR domain name matches a config parameter and replace it with the corresponding value
+                    for param, value in config_params.items():
+                        if qn in param:
+                            ptr_answerd = value
+                            break
+                        else:
+                            ptr_answerd = str(ptrdomain_name+'.'+ipv6_domain)
+                    
                     logging.info(f"IPV6: {ipv6_addr} found in subnet {subnet} and resolv answer as: {ptr_answerd}")
                     logging.info("SERVER ANSWER: " + ptr_answerd)
                     reply.add_answer(RR(rname=qname, rtype=QTYPE.PTR, rdata=PTR(ptr_answerd), ttl=60))
@@ -124,34 +138,6 @@ def dns_response_ipv6ptr(data):
 
     return reply.pack()
 
-
-def dns_response(data):
-    request = DNSRecord.parse(data)
-    reply = DNSRecord(DNSHeader(id=request.header.id, qr=1, aa=1, ra=1), q=request.q)
-    qname = request.q.qname
-    qn = str(qname)
-    qtype = request.q.qtype
-    qt = QTYPE[qtype]
-
-    if qn == D or qn.endswith('.' + D):
-
-        for name, rrs in records.items():
-            if name == qn:
-                for rdata in rrs:
-                    rqt = rdata.__class__.__name__
-                    if qt in ['*', rqt]:
-                        reply.add_answer(RR(rname=qname, rtype=getattr(QTYPE, rqt), rclass=1, ttl=TTL, rdata=rdata))
-
-        for rdata in ns_records:
-            reply.add_ar(RR(rname=D, rtype=QTYPE.NS, rclass=1, ttl=TTL, rdata=rdata))
-
-        reply.add_auth(RR(rname=D, rtype=QTYPE.SOA, rclass=1, ttl=TTL, rdata=soa_record))
-
-    print("---- Reply:\n", reply)
-
-    return reply.pack()
-
-
 class BaseRequestHandler(socketserver.BaseRequestHandler):
 
     def get_data(self):
@@ -162,19 +148,13 @@ class BaseRequestHandler(socketserver.BaseRequestHandler):
 
     def handle(self):
         now = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')
-        #print("\n\n%s request %s (%s %s):" % (self.__class__.__name__[:3], now, self.client_address[0],
-        #                                       self.client_address[1]))
         logging.info("%s request %s (%s %s):" % (self.__class__.__name__[:3], now, self.client_address[0], self.client_address[1]))
-        #print("%s server loop running in thread: %s" % (s.RequestHandlerClass.__name__[:3], thread.name))
 
         try:
             data = self.get_data()
-            #print(len(data), data)  # repr(data).replace('\\x', '')[1:-1]
             self.send_data(dns_response_ipv6ptr(data))
-            #self.send_data(dns_response(data))
         except Exception:
             traceback.print_exc(file=sys.stderr)
-
 
 class TCPRequestHandler(BaseRequestHandler):
 
@@ -191,18 +171,13 @@ class TCPRequestHandler(BaseRequestHandler):
         sz = struct.pack('>H', len(data))
         return self.request.sendall(sz + data)
 
-
 class UDPRequestHandler(BaseRequestHandler):
 
     def get_data(self):
         return self.request[0]
 
-    #def get_data(self):
-    #    return self.request[0].strip()
-
     def send_data(self, data):
         return self.request[1].sendto(data, self.client_address)
-
 
 def main():
     parser = argparse.ArgumentParser(description='Start a IPV6AUTOPTR implemented in Python.')
@@ -210,8 +185,6 @@ def main():
     parser.add_argument('--tcp', action='store_true', help='Listen to TCP connections.')
     parser.add_argument('--udp', action='store_true', help='Listen to UDP datagrams.')
     parser.add_argument("--verbose", action = "count", default=0, help="Increase verbosity")
-    #parser.add_argument('--d', default=logging.INFO, action='store_true', help='Debug mode. Example --d logging.DEBUG, default=logging.INFO')
-
     args = parser.parse_args()
     if not (args.udp or args.tcp): parser.error("Please select at least one of --udp or --tcp.")
 
@@ -232,9 +205,6 @@ def main():
         format="%(asctime)s - %(levelname)s - %(message)s",
         level=level,
     )
-
-    #if args.d: logging.basicConfig(level=args.d, format='%(asctime)s :: %(levelname)s :: %(message)s')
-    #if args.d: logging.basicConfig(level=logging.DEBUG, format='%(asctime)s :: %(levelname)s :: %(message)s')
 
     for s in servers:
         thread = threading.Thread(target=s.serve_forever)  # that thread will start one more thread for each request
