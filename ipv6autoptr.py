@@ -159,7 +159,7 @@ class BaseRequestHandler(socketserver.BaseRequestHandler):
 class TCPRequestHandler(BaseRequestHandler):
 
     def get_data(self):
-        data = self.request.recv(8192).strip()
+        data = self.request.recv(8192)
         sz = struct.unpack('>H', data[:2])[0]
         if sz < len(data) - 2:
             raise Exception("Wrong size of TCP packet")
