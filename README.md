@@ -91,6 +91,7 @@ ExecStop=/bin/kill -s TERM $MAINPID
 [Install]
 WantedBy=multi-user.target
 ```
+If you want to disable logging to /var/log/syslog (journald)  itself for DNS server requests and responses, you can remove the --verbose option. Thus, slightly increasing performance. 
 
 And run:
 ```
