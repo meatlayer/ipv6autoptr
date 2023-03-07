@@ -45,14 +45,12 @@ e.f.e.f.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.a.0.0.0.0.0.8.d.8.a.0.a.2.ip6.arpa        
 Each IPv6 for which an attempt is made to obtain a reverse DNS entry will automatically generate a response.
 
 ### Configuration ###
-In the script itself, you must specify your IPv6 subnets, IP and your static domain as configuration:
+In the script itself, you must specify your IPv6 subnets, and your static domain as configuration:
 ```
 # Set up subnets
 subnets = ['2a0a:XXXX::/48', '2a0a:XXXX:0:a000::/64']
 
 D = DomainName('ip6.mydomain.net.')
-IP = '122.123.124.125'
-IP6 = '2a0a:XXX:0:a000::125'
 ```
 
 ### Configuration Custom PTR ###
