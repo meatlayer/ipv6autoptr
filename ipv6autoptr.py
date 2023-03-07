@@ -23,6 +23,7 @@ import threading
 import traceback
 import ipaddress
 import socketserver
+import concurrent.futures
 import struct
 import logging
 try:
@@ -41,30 +42,30 @@ IPV6AUTOPTR_VERSION = "0.1"
 subnets = ['2a0a:XXXX::/48', '2a0a:XXXX:0:a000::/64']
 
 D = DomainName('ip6.mydomain.net.')
-IP = '122.123.124.125'
-IP6 = '2a0a:XXXX:0:a000::125'
+#IP = '122.123.124.125'
+#IP6 = '2a0a:XXXX:0:a000::125'
 
-TTL = 60 * 5
+#TTL = 60 * 5
 
-soa_record = SOA(
-    mname=D.ns1,  # primary name server
-    rname=D.robot,  # email of the domain administrator
-    times=(
-        2023120829,  # serial number
-        60 * 60 * 1,  # refresh
-        60 * 60 * 3,  # retry
-        60 * 60 * 24,  # expire
-        60 * 60 * 1,  # minimum
-    )
-)
-ns_records = [NS(D.ns1), NS(D.ns2)]
-records = {
-    D: [A(IP), AAAA(IP6), MX(D.mail), soa_record] + ns_records,
-    D.ns1: [A(IP)],  # MX and NS records must never point to a CNAME alias (RFC 2181 section 10.3)
-    D.ns2: [A(IP)],
-    D.mail: [A(IP)],
-    D.robot: [CNAME(D)],
-}
+#soa_record = SOA(
+#    mname=D.ns1,  # primary name server
+#    rname=D.robot,  # email of the domain administrator
+#    times=(
+#        2023120829,  # serial number
+#        60 * 60 * 1,  # refresh
+#        60 * 60 * 3,  # retry
+#        60 * 60 * 24,  # expire
+#        60 * 60 * 1,  # minimum
+#    )
+#)
+#ns_records = [NS(D.ns1), NS(D.ns2)]
+#records = {
+#    D: [A(IP), AAAA(IP6), MX(D.mail), soa_record] + ns_records,
+#    D.ns1: [A(IP)],  # MX and NS records must never point to a CNAME alias (RFC 2181 section 10.3)
+#    D.ns2: [A(IP)],
+#    D.mail: [A(IP)],
+#    D.robot: [CNAME(D)],
+#}
 
 # func for ipv6 auto ptr
 def dns_response_ipv6ptr(data):
@@ -81,6 +82,7 @@ def dns_response_ipv6ptr(data):
 
     #if req type = PTR
     if '.ip6.arpa' in qn:
+        #print("OK ip6.arpa found")
 
         if request.q.qtype == '12' or request.q.qtype == QTYPE.PTR or request.q.qtype == 'PTR':
 
@@ -96,6 +98,7 @@ def dns_response_ipv6ptr(data):
 
             # Create an IPv6 address object from the byte string
             ipv6_addr = ipaddress.IPv6Address(byte_string)
+
             logging.info("CLIENT REQUEST: " + qn)
 
             # Search the subnets for a match
@@ -124,7 +127,7 @@ def dns_response_ipv6ptr(data):
                     
                     logging.info(f"IPV6: {ipv6_addr} found in subnet {subnet} and resolv answer as: {ptr_answerd}")
                     logging.info("SERVER ANSWER: " + ptr_answerd)
-                    reply.add_answer(RR(rname=qname, rtype=QTYPE.PTR, rdata=PTR(ptr_answerd), ttl=3600))
+                    reply.add_answer(RR(rname=qname, rtype=QTYPE.PTR, rdata=PTR(ptr_answerd), ttl=86400))
                     break
 
             else:
@@ -140,6 +143,8 @@ def dns_response_ipv6ptr(data):
 
 class BaseRequestHandler(socketserver.BaseRequestHandler):
 
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=32)
+
     def get_data(self):
         raise NotImplementedError
 
@@ -150,11 +155,18 @@ class BaseRequestHandler(socketserver.BaseRequestHandler):
         now = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')
         logging.info("%s request %s (%s %s):" % (self.__class__.__name__[:3], now, self.client_address[0], self.client_address[1]))
 
-        try:
-            data = self.get_data()
-            self.send_data(dns_response_ipv6ptr(data))
-        except Exception:
-            traceback.print_exc(file=sys.stderr)
+        data = self.get_data()
+        future = self.executor.submit(dns_response_ipv6ptr, data)
+
+        def send_response():
+            try:
+                response = future.result()
+                self.send_data(response)
+            except Exception as e:
+                traceback.print_exc(file=sys.stderr)
+
+        threading.Thread(target=send_response).start()
+
 
 class TCPRequestHandler(BaseRequestHandler):
 
@@ -168,8 +180,14 @@ class TCPRequestHandler(BaseRequestHandler):
         return data[2:]
 
     def send_data(self, data):
-        sz = struct.pack('>H', len(data))
-        return self.request.sendall(sz + data)
+        try:
+            sz = struct.pack('!H', len(data))
+            if self.request.fileno() == -1:
+                return
+            self.request.sendall(sz + data)
+        except OSError as e:
+            logging.error("Error sending data: {}".format(str(e)))
+
 
 class UDPRequestHandler(BaseRequestHandler):
 
@@ -177,7 +195,10 @@ class UDPRequestHandler(BaseRequestHandler):
         return self.request[0]
 
     def send_data(self, data):
-        return self.request[1].sendto(data, self.client_address)
+        try:
+            return self.request[1].sendto(data, self.client_address)
+        except OSError as e:
+            logging.exception(f"Error while sending data: {e}")
 
 def main():
     parser = argparse.ArgumentParser(description='Start a IPV6AUTOPTR implemented in Python.')
