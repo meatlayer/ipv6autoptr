@@ -186,7 +186,10 @@ class TCPRequestHandler(BaseRequestHandler):
                 return
             self.request.sendall(sz + data)
         except OSError as e:
-            logging.error("Error sending data: {}".format(str(e)))
+            if e.errno == 9:
+                logging.error("Socket closed")
+            else:
+                logging.error("Error sending data: {}".format(str(e)))
 
 
 class UDPRequestHandler(BaseRequestHandler):
