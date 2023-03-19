@@ -58,12 +58,22 @@ Custom PTR for customers and for each IPv6 / ip6.arpa
 
 Completed example [/etc/ipv6autoptr.conf](https://github.com/meatlayer/ipv6autoptr/blob/main/ipv6autoptr.conf):
 
-Example IPV6 2a0a:8d80::11 = 1.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.d.8.a.0.a.2.ip6.arpa.
+Examples rDNS PTR records for IPv6:
+```
+1.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.d.8.a.0.a.2.ip6.arpa.  IN PTR custom-ptr.ip6.mydomain.net.
+1.f.1.f.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.d.8.a.0.a.2.ip6.arpa.  IN PTR custom-ptr2.ip6.mydomain.net.
+```
+or IPv6 address = PTR:
+```
+2a0a:8d80::11 = 1.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.d.8.a.0.a.2.ip6.arpa.
 
-Example IPV6 2a0a:8d80::f1f1 = 1.f.1.f.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.d.8.a.0.a.2.ip6.arpa.
+2a0a:8d80::f1f1 = 1.f.1.f.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.d.8.a.0.a.2.ip6.arpa.
+```
 
 
-Then `/etc/ipv6autoptr.conf` file:
+An example of creating your own records that will not fall under the automatic generated
+
+`/etc/ipv6autoptr.conf` format:
 ```
 1.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.d.8.a.0.a.2.ip6.arpa. = custom-ptr.ip6.mydomain.net
 1.f.1.f.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.d.8.a.0.a.2.ip6.arpa. = custom-ptr2.ip6.mydomain.net
